@@ -4,6 +4,8 @@
     name:
       - tar
       - gzip
+      - dkms
+      - python3-pip
     state: present
     update_cache: true
   when: mft_enabled | bool
@@ -40,7 +42,8 @@
       DEBS=$(find {{ mft_extract_dir }} -type f -name "*.deb")
       if [ -n "$DEBS" ]; then
         # Use find to locate and pass all debs directly to dpkg
-        echo "$DEBS" | xargs dpkg -i
+        # Fallback to apt-get install -f to fix nested dependencies like dkms
+        echo "$DEBS" | xargs dpkg -i || apt-get install -f -y
       else
         echo "Error: No .deb files found in {{ mft_extract_dir }}" >&2
         exit 1
