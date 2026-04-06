@@ -44,3 +44,20 @@
     enabled: true
     state: started
   tags: ["rke2-worker", "kubernetes"]
+
+- name: Wait for RKE2 server to generate kubeconfig
+  ansible.builtin.wait_for:
+    path: /etc/rancher/rke2/rke2.yaml
+    state: present
+    timeout: 300
+  tags: ["rke2-worker", "kubernetes"]
+
+- name: Wait for Kubernetes API server to be ready
+  ansible.builtin.command: >
+    kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes
+  register: kubectl_nodes
+  until: kubectl_nodes.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  tags: ["rke2-worker", "kubernetes"]
