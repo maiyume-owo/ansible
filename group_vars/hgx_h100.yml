@@ -84,12 +84,12 @@ vast_csi_kubeconfig: "/etc/rancher/rke2/rke2.yaml"
 
 # MFT / OFED installers (vendor-hosted artifacts)
 mft_enabled: true
-mft_installer_url: "https://content.mellanox.com/MFT/mft-latest-x86_64-deb.tgz"
+mft_installer_url: "http://10.233.20.238/H100/test/mft-4.34.1-18-x86_64-deb.tgz"
 mft_installer_archive: "/tmp/mft-installer.tgz"
 mft_extract_dir: "/tmp/mft-installer"
 
 ofed_enabled: true
-ofed_installer_url: "https://content.mellanox.com/ofed/MLNX_OFED-latest/MLNX_OFED_LINUX-latest-ubuntu22.04-x86_64.tgz"
+ofed_installer_url: "http://10.233.20.238/H100/test/MLNX_OFED_LINUX-24.10-4.1.4.0-ubuntu22.04-x86_64.tgz"
 ofed_installer_archive: "/tmp/ofed-installer.tgz"
 ofed_extract_dir: "/tmp/ofed-installer"
 ofed_install_extra_args: "--without-fw-update --add-kernel-support"

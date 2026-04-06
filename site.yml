@@ -13,9 +13,9 @@
       tags: ["monitoring", "node-exporter", "dcgm-exporter"]
     - role: ofed_mft
       tags: ["ofed", "mft", "drivers"]
-    - role: rke2_worker
-      tags: ["rke2-worker", "kubernetes"]
+#    - role: rke2_worker
+#      tags: ["rke2-worker", "kubernetes"]
     - role: gpu_operator
       tags: ["gpu-operator", "nvidia-driver"]
-    - role: vast_csi
-      tags: ["vast-csi", "storage", "rdma"]
+#    - role: vast_csi
+#      tags: ["vast-csi", "storage", "rdma"]
