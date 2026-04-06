@@ -1,0 +1,14 @@
+# Managed by Ansible
+# Complex values are centralized here to keep task logic simple and idempotent.
+driver:
+  enabled: true
+  version: "{{ gpu_driver_version }}"
+toolkit:
+  enabled: true
+operator:
+  defaultRuntime: containerd
+validator:
+  plugin:
+    env:
+      - name: CUDA_VERSION
+        value: "{{ gpu_driver_cuda_version }}"

@@ -1,0 +1,44 @@
+---
+- name: Render VAST CSI values
+  ansible.builtin.copy:
+    dest: /tmp/vast-csi-values.yaml
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      csi:
+        nfs:
+          version: "3"
+          rdma: {{ vast_csi_nfs_rdma_enabled | ternary('true', 'false') }}
+  when: vast_csi_enabled | bool
+  tags: ["vast-csi", "storage", "rdma"]
+
+- name: Add VAST CSI helm repository
+  ansible.builtin.command: "helm repo add {{ vast_csi_helm_repo_name }} {{ vast_csi_helm_repo_url }}"
+  environment:
+    KUBECONFIG: "{{ vast_csi_kubeconfig }}"
+  register: vast_repo_add
+  changed_when: "'already exists' not in (vast_repo_add.stderr | lower)"
+  failed_when: vast_repo_add.rc != 0 and ('already exists' not in (vast_repo_add.stderr | lower))
+  when: vast_csi_enabled | bool
+  tags: ["vast-csi", "storage", "rdma"]
+
+- name: Update helm repositories
+  ansible.builtin.command: helm repo update
+  environment:
+    KUBECONFIG: "{{ vast_csi_kubeconfig }}"
+  changed_when: false
+  when: vast_csi_enabled | bool
+  tags: ["vast-csi", "storage", "rdma"]
+
+- name: Deploy VAST CSI chart
+  ansible.builtin.command: >
+    helm upgrade --install {{ vast_csi_release_name }} {{ vast_csi_chart_ref }}
+    --namespace {{ vast_csi_namespace }}
+    --create-namespace
+    --version {{ vast_csi_chart_version }}
+    -f /tmp/vast-csi-values.yaml
+  environment:
+    KUBECONFIG: "{{ vast_csi_kubeconfig }}"
+  when: vast_csi_enabled | bool
+  tags: ["vast-csi", "storage", "rdma"]

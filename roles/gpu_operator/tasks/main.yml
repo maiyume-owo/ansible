@@ -1,0 +1,61 @@
+---
+- name: Install Helm client
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if ! command -v helm >/dev/null 2>&1; then
+      curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: gpu_operator_enabled | bool
+  tags: ["gpu-operator", "nvidia-driver"]
+
+- name: Render GPU Operator values
+  ansible.builtin.template:
+    src: values.yaml.j2
+    dest: /tmp/gpu-operator-values.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: gpu_operator_enabled | bool
+  tags: ["gpu-operator", "nvidia-driver"]
+
+- name: Add NVIDIA helm repository
+  ansible.builtin.command: helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
+  environment:
+    KUBECONFIG: "{{ gpu_operator_kubeconfig }}"
+  register: gpu_repo_add
+  changed_when: "'already exists' not in (gpu_repo_add.stderr | lower)"
+  failed_when: gpu_repo_add.rc != 0 and ('already exists' not in (gpu_repo_add.stderr | lower))
+  when: gpu_operator_enabled | bool
+  tags: ["gpu-operator", "nvidia-driver"]
+
+- name: Update helm repositories
+  ansible.builtin.command: helm repo update
+  environment:
+    KUBECONFIG: "{{ gpu_operator_kubeconfig }}"
+  changed_when: false
+  when: gpu_operator_enabled | bool
+  tags: ["gpu-operator", "nvidia-driver"]
+
+- name: Deploy NVIDIA GPU Operator chart
+  ansible.builtin.command: >
+    helm upgrade --install gpu-operator nvidia/gpu-operator
+    --namespace {{ gpu_operator_namespace }}
+    --create-namespace
+    --version {{ gpu_operator_version }}
+    -f /tmp/gpu-operator-values.yaml
+  environment:
+    KUBECONFIG: "{{ gpu_operator_kubeconfig }}"
+  when: gpu_operator_enabled | bool
+  tags: ["gpu-operator", "nvidia-driver"]
+
+- name: Wait for GPU Operator controller rollout
+  ansible.builtin.command: >
+    kubectl --kubeconfig {{ gpu_operator_kubeconfig }}
+    -n {{ gpu_operator_namespace }}
+    rollout status deployment/gpu-operator --timeout=600s
+  changed_when: false
+  when: gpu_operator_enabled | bool
+  tags: ["gpu-operator", "nvidia-driver"]

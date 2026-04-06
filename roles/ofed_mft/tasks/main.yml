@@ -1,0 +1,98 @@
+---
+- name: Install MFT dependencies with temporary apt proxy
+  when: mft_enabled | bool
+  block:
+    - name: Configure temporary apt proxy
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/99temporary-proxy
+        content: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";\n"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install MFT dependencies
+      ansible.builtin.apt:
+        name:
+          - tar
+          - gzip
+        state: present
+        update_cache: true
+  always:
+    - name: Remove temporary apt proxy
+      ansible.builtin.file:
+        path: /etc/apt/apt.conf.d/99temporary-proxy
+        state: absent
+  tags: ["mft", "drivers"]
+
+- name: Download MFT installer archive
+  ansible.builtin.get_url:
+    url: "{{ mft_installer_url }}"
+    dest: "{{ mft_installer_archive }}"
+    mode: "0644"
+  when: mft_enabled | bool
+  tags: ["mft", "drivers"]
+
+- name: Ensure MFT extraction directory exists
+  ansible.builtin.file:
+    path: "{{ mft_extract_dir }}"
+    state: directory
+    mode: "0755"
+  when: mft_enabled | bool
+  tags: ["mft", "drivers"]
+
+- name: Extract MFT archive
+  ansible.builtin.unarchive:
+    src: "{{ mft_installer_archive }}"
+    dest: "{{ mft_extract_dir }}"
+    remote_src: true
+  when: mft_enabled | bool
+  tags: ["mft", "drivers"]
+
+- name: Install MFT package from extracted deb files
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if ! command -v mst >/dev/null 2>&1; then
+      dpkg -i {{ mft_extract_dir }}/*/*.deb
+    fi
+  args:
+    executable: /bin/bash
+  when: mft_enabled | bool
+  changed_when: false
+  tags: ["mft", "drivers"]
+
+- name: Download OFED installer archive
+  ansible.builtin.get_url:
+    url: "{{ ofed_installer_url }}"
+    dest: "{{ ofed_installer_archive }}"
+    mode: "0644"
+  when: ofed_enabled | bool
+  tags: ["ofed", "drivers"]
+
+- name: Ensure OFED extraction directory exists
+  ansible.builtin.file:
+    path: "{{ ofed_extract_dir }}"
+    state: directory
+    mode: "0755"
+  when: ofed_enabled | bool
+  tags: ["ofed", "drivers"]
+
+- name: Extract OFED archive
+  ansible.builtin.unarchive:
+    src: "{{ ofed_installer_archive }}"
+    dest: "{{ ofed_extract_dir }}"
+    remote_src: true
+  when: ofed_enabled | bool
+  tags: ["ofed", "drivers"]
+
+- name: Install OFED when not already installed
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if ! ofed_info -s >/dev/null 2>&1; then
+      cd {{ ofed_extract_dir }}/*/
+      ./mlnxofedinstall --force {{ ofed_install_extra_args }}
+    fi
+  args:
+    executable: /bin/bash
+  when: ofed_enabled | bool
+  changed_when: false
+  tags: ["ofed", "drivers"]

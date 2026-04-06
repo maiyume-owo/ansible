@@ -1,0 +1,15 @@
+server: "{{ rke2_server_url }}"
+token: "{{ rke2_cluster_token }}"
+node-name: "{{ inventory_hostname }}"
+{% if rke2_node_labels | length > 0 %}
+node-label:
+{% for label in rke2_node_labels %}
+  - "{{ label }}"
+{% endfor %}
+{% endif %}
+{% if rke2_node_taints | length > 0 %}
+node-taint:
+{% for taint in rke2_node_taints %}
+  - "{{ taint }}"
+{% endfor %}
+{% endif %}

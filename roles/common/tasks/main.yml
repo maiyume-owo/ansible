@@ -1,0 +1,51 @@
+---
+- name: Get current timezone
+  ansible.builtin.command: timedatectl show --property=Timezone --value
+  register: current_timezone
+  changed_when: false
+  tags: ["timezone"]
+
+- name: Set system timezone
+  ansible.builtin.command: "timedatectl set-timezone {{ system_timezone }}"
+  when: current_timezone.stdout != system_timezone
+  tags: ["timezone"]
+
+- name: Install baseline packages with temporary apt proxy
+  block:
+    - name: Configure temporary apt proxy
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/99temporary-proxy
+        content: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";\n"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install baseline package set
+      ansible.builtin.apt:
+        name: "{{ baseline_packages }}"
+        state: present
+        update_cache: true
+      tags: ["baseline", "performance"]
+  always:
+    - name: Remove temporary apt proxy
+      ansible.builtin.file:
+        path: /etc/apt/apt.conf.d/99temporary-proxy
+        state: absent
+  tags: ["baseline", "performance"]
+
+- name: Persist CPU governor setting
+  ansible.builtin.template:
+    src: cpufrequtils.j2
+    dest: /etc/default/cpufrequtils
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart cpufrequtils
+  tags: ["performance", "cpu-tuning"]
+
+- name: Ensure cpufrequtils service is enabled and running
+  ansible.builtin.systemd:
+    name: cpufrequtils
+    enabled: true
+    state: started
+  tags: ["performance", "cpu-tuning"]

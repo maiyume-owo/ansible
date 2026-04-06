@@ -1,0 +1,21 @@
+---
+- name: Prepare Ubuntu H100 worker nodes
+  hosts: hgx_h100
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: common
+      tags: ["baseline", "timezone", "performance", "cpu-tuning"]
+    - role: container_runtime
+      tags: ["docker", "nvidia-toolkit", "container-runtime"]
+    - role: monitoring_exporters
+      tags: ["monitoring", "node-exporter", "dcgm-exporter"]
+    - role: ofed_mft
+      tags: ["ofed", "mft", "drivers"]
+    - role: rke2_worker
+      tags: ["rke2-worker", "kubernetes"]
+    - role: gpu_operator
+      tags: ["gpu-operator", "nvidia-driver"]
+    - role: vast_csi
+      tags: ["vast-csi", "storage", "rdma"]

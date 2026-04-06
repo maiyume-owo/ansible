@@ -1,0 +1,42 @@
+---
+- name: Ensure RKE2 config directory exists
+  ansible.builtin.file:
+    path: /etc/rancher/rke2
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags: ["rke2-worker", "kubernetes"]
+
+- name: Render RKE2 agent config
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart rke2 agent
+  tags: ["rke2-worker", "kubernetes"]
+
+- name: Download RKE2 installer script
+  ansible.builtin.get_url:
+    url: https://get.rke2.io
+    dest: /tmp/install_rke2.sh
+    mode: "0755"
+  tags: ["rke2-worker", "kubernetes"]
+
+- name: Install RKE2 agent
+  ansible.builtin.command: /tmp/install_rke2.sh
+  environment:
+    INSTALL_RKE2_TYPE: agent
+    INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+  args:
+    creates: /usr/local/bin/rke2
+  tags: ["rke2-worker", "kubernetes"]
+
+- name: Enable and start rke2-agent service
+  ansible.builtin.systemd:
+    name: rke2-agent
+    enabled: true
+    state: started
+  tags: ["rke2-worker", "kubernetes"]

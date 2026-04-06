@@ -1,0 +1,97 @@
+---
+# Connection / privilege
+ansible_user: gn-user
+ansible_become: true
+
+# Critical temporary apt proxy for all apt operations.
+# Tasks create /etc/apt/apt.conf.d/99temporary-proxy, run apt, then remove it.
+apt_proxy_url: "http://10.233.20.238:3142"
+
+# Timezone
+system_timezone: "Asia/Bangkok"
+
+# Baseline packages for H100 worker nodes
+baseline_packages:
+  - chrpath
+  - cifs-utils
+  - fping
+  - gdisk
+  - iperf
+  - ipmitool
+  - lsscsi
+  - net-tools
+  - nfs-common
+  - quota
+  - rasdaemon
+  - pm-utils
+  - samba-common
+  - samba-libs
+  - sysstat
+  - vlan
+  - build-essential
+  - automake
+  - bison
+  - cmake
+  - dpatch
+  - flex
+  - gcc-multilib
+  - gdb
+  - g++-multilib
+  - libelf-dev
+  - libltdl-dev
+  - linux-tools-generic
+  - m4
+  - swig
+  - cpufrequtils
+
+# CPU governor tuning
+cpu_governor: "performance"
+
+# Exporters
+dcgm_exporter_image: "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.9-3.6.1-ubuntu22.04"
+dcgm_exporter_listen_port: "9400"
+node_exporter_enabled: true
+dcgm_exporter_enabled: true
+
+# Docker + NVIDIA Container Toolkit
+docker_apt_release_channel: "stable"
+
+# RKE2 worker (agent)
+rke2_version: "v1.35.3+rke2r1"
+rke2_server_url: "https://REPLACE_WITH_RKE2_SERVER:9345"
+rke2_cluster_token: "REPLACE_WITH_CLUSTER_TOKEN"
+rke2_node_labels:
+  - "node-role.kubernetes.io/worker=true"
+rke2_node_taints: []
+
+# GPU Operator
+gpu_operator_enabled: true
+gpu_operator_version: "v25.10.1"
+gpu_operator_namespace: "gpu-operator"
+gpu_driver_version: "570.158.01"
+gpu_driver_cuda_version: "12.8"
+# Use a kubeconfig with enough permissions to install cluster components.
+gpu_operator_kubeconfig: "/etc/rancher/rke2/rke2.yaml"
+
+# VAST CSI
+vast_csi_enabled: true
+vast_csi_namespace: "vast-csi"
+vast_csi_release_name: "vast-csi"
+vast_csi_helm_repo_name: "vastdata"
+vast_csi_helm_repo_url: "https://vast-data.github.io/charts"
+vast_csi_chart_ref: "vastdata/vast-csi"
+vast_csi_chart_version: "REPLACE_WITH_VALID_VERSION"
+vast_csi_nfs_rdma_enabled: true
+vast_csi_kubeconfig: "/etc/rancher/rke2/rke2.yaml"
+
+# MFT / OFED installers (vendor-hosted artifacts)
+mft_enabled: true
+mft_installer_url: "https://content.mellanox.com/MFT/mft-latest-x86_64-deb.tgz"
+mft_installer_archive: "/tmp/mft-installer.tgz"
+mft_extract_dir: "/tmp/mft-installer"
+
+ofed_enabled: true
+ofed_installer_url: "https://content.mellanox.com/ofed/MLNX_OFED-latest/MLNX_OFED_LINUX-latest-ubuntu22.04-x86_64.tgz"
+ofed_installer_archive: "/tmp/ofed-installer.tgz"
+ofed_extract_dir: "/tmp/ofed-installer"
+ofed_install_extra_args: "--without-fw-update --add-kernel-support"
