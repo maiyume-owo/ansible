@@ -50,45 +50,24 @@
 
 
 
-- name: Install kernel headers for current running kernel
-  ansible.builtin.shell: apt-get install -y linux-headers-$(uname -r)
-  changed_when: false
-  when: ofed_enabled | bool
-  tags: ["ofed", "drivers"]
-
-- name: Download OFED installer archive
+- name: Download DOCA host repository package
   ansible.builtin.get_url:
-    url: "{{ ofed_installer_url }}"
-    dest: "{{ ofed_installer_archive }}"
+    url: "{{ doca_installer_url }}"
+    dest: "{{ doca_installer_deb }}"
     mode: "0644"
-  when: ofed_enabled | bool
-  tags: ["ofed", "drivers"]
+  when: doca_enabled | bool
+  tags: ["doca", "drivers"]
 
-- name: Ensure OFED extraction directory exists
-  ansible.builtin.file:
-    path: "{{ ofed_extract_dir }}"
-    state: directory
-    mode: "0755"
-  when: ofed_enabled | bool
-  tags: ["ofed", "drivers"]
+- name: Install DOCA repository package
+  ansible.builtin.apt:
+    deb: "{{ doca_installer_deb }}"
+  when: doca_enabled | bool
+  tags: ["doca", "drivers"]
 
-- name: Extract OFED archive
-  ansible.builtin.unarchive:
-    src: "{{ ofed_installer_archive }}"
-    dest: "{{ ofed_extract_dir }}"
-    remote_src: true
-  when: ofed_enabled | bool
-  tags: ["ofed", "drivers"]
-
-- name: Install OFED when not already installed
-  ansible.builtin.shell: |
-    set -euo pipefail
-    if ! ofed_info -s >/dev/null 2>&1; then
-      cd {{ ofed_extract_dir }}/*/
-      ./mlnxofedinstall --force {{ ofed_install_extra_args }}
-    fi
-  args:
-    executable: /bin/bash
-  when: ofed_enabled | bool
-  changed_when: false
-  tags: ["ofed", "drivers"]
+- name: Install doca-all driver set
+  ansible.builtin.apt:
+    name: doca-all
+    state: present
+    update_cache: true
+  when: doca_enabled | bool
+  tags: ["doca", "drivers"]
