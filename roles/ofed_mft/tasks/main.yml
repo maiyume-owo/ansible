@@ -37,7 +37,14 @@
   ansible.builtin.shell: |
     set -euo pipefail
     if ! command -v mst >/dev/null 2>&1; then
-      dpkg -i {{ mft_extract_dir }}/*/*.deb
+      DEBS=$(find {{ mft_extract_dir }} -type f -name "*.deb")
+      if [ -n "$DEBS" ]; then
+        # Use find to locate and pass all debs directly to dpkg
+        echo "$DEBS" | xargs dpkg -i
+      else
+        echo "Error: No .deb files found in {{ mft_extract_dir }}" >&2
+        exit 1
+      fi
     fi
   args:
     executable: /bin/bash
