@@ -11,16 +11,6 @@
   when: gpu_operator_enabled | bool
   tags: ["gpu-operator", "nvidia-driver"]
 
-- name: Render GPU Operator values
-  ansible.builtin.template:
-    src: values.yaml.j2
-    dest: /tmp/gpu-operator-values.yaml
-    owner: root
-    group: root
-    mode: "0644"
-  when: gpu_operator_enabled | bool
-  tags: ["gpu-operator", "nvidia-driver"]
-
 - name: Add NVIDIA helm repository
   ansible.builtin.command: helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
   environment:
@@ -45,7 +35,6 @@
     --namespace {{ gpu_operator_namespace }}
     --create-namespace
     --version {{ gpu_operator_version }}
-    -f /tmp/gpu-operator-values.yaml
   environment:
     KUBECONFIG: "{{ gpu_operator_kubeconfig }}"
   when: gpu_operator_enabled | bool
