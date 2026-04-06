@@ -10,28 +10,24 @@
   when: current_timezone.stdout != system_timezone
   tags: ["timezone"]
 
-- name: Install baseline packages with temporary apt proxy
+- name: Install baseline packages without proxy
   block:
     - name: Ensure universe repository is enabled (required for chrpath)
       ansible.builtin.apt_repository:
         repo: "deb http://archive.ubuntu.com/ubuntu/ {{ ansible_distribution_release }} universe"
         state: present
 
-    - name: Clean stale APT lists (forces re-fetch via proxy)
+    - name: Clean stale APT lists (forces a fresh fetch)
       ansible.builtin.file:
         path: "/var/lib/apt/lists/{{ item }}"
         state: absent
       loop: ["lock", "partial"]
-      # More aggressively, you could use 'ansible.builtin.command: rm -rf /var/lib/apt/lists/*' but this is safer.
 
     - name: Install baseline package set
       ansible.builtin.apt:
         name: "{{ baseline_packages }}"
         state: present
         update_cache: true
-  environment:
-    http_proxy: "{{ apt_proxy_url }}"
-    https_proxy: "{{ apt_proxy_url }}"
   tags: ["baseline", "performance"]
 
 - name: Persist CPU governor setting
