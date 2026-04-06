@@ -1,27 +1,12 @@
 ---
-- name: Install MFT dependencies with temporary apt proxy
+- name: Install MFT dependencies
+  ansible.builtin.apt:
+    name:
+      - tar
+      - gzip
+    state: present
+    update_cache: true
   when: mft_enabled | bool
-  block:
-    - name: Configure temporary apt proxy
-      ansible.builtin.copy:
-        dest: /etc/apt/apt.conf.d/99temporary-proxy
-        content: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";\n"
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Install MFT dependencies
-      ansible.builtin.apt:
-        name:
-          - tar
-          - gzip
-        state: present
-        update_cache: true
-  always:
-    - name: Remove temporary apt proxy
-      ansible.builtin.file:
-        path: /etc/apt/apt.conf.d/99temporary-proxy
-        state: absent
   tags: ["mft", "drivers"]
 
 - name: Download MFT installer archive

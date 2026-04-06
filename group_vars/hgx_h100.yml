@@ -3,9 +3,7 @@
 ansible_user: gn-user
 ansible_become: true
 
-# Critical temporary apt proxy for all apt operations.
-# Tasks create /etc/apt/apt.conf.d/99temporary-proxy, run apt, then remove it.
-apt_proxy_url: "http://10.233.20.238:3142"
+
 
 # Timezone
 system_timezone: "Asia/Bangkok"

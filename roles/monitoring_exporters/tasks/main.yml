@@ -1,25 +1,10 @@
 ---
-- name: Install Node Exporter package with temporary apt proxy
+- name: Install prometheus node exporter package
+  ansible.builtin.apt:
+    name: prometheus-node-exporter
+    state: present
+    update_cache: true
   when: node_exporter_enabled | bool
-  block:
-    - name: Configure temporary apt proxy
-      ansible.builtin.copy:
-        dest: /etc/apt/apt.conf.d/99temporary-proxy
-        content: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";\n"
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Install prometheus node exporter package
-      ansible.builtin.apt:
-        name: prometheus-node-exporter
-        state: present
-        update_cache: true
-  always:
-    - name: Remove temporary apt proxy
-      ansible.builtin.file:
-        path: /etc/apt/apt.conf.d/99temporary-proxy
-        state: absent
   tags: ["monitoring", "node-exporter"]
 
 - name: Ensure node exporter service is enabled and running

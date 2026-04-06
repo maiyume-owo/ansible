@@ -1,27 +1,12 @@
 ---
-- name: Install Docker repository prerequisites with temporary apt proxy
-  block:
-    - name: Configure temporary apt proxy
-      ansible.builtin.copy:
-        dest: /etc/apt/apt.conf.d/99temporary-proxy
-        content: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";\n"
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Install prerequisite packages for Docker repository
-      ansible.builtin.apt:
-        name:
-          - ca-certificates
-          - curl
-          - gnupg
-        state: present
-        update_cache: true
-  always:
-    - name: Remove temporary apt proxy
-      ansible.builtin.file:
-        path: /etc/apt/apt.conf.d/99temporary-proxy
-        state: absent
+- name: Install prerequisite packages for Docker repository
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
   tags: ["docker", "container-runtime"]
 
 - name: Ensure apt keyrings directory exists
@@ -78,32 +63,17 @@
     filename: nvidia-container-toolkit
   tags: ["nvidia-toolkit", "container-runtime"]
 
-- name: Install Docker and NVIDIA container toolkit with temporary apt proxy
-  block:
-    - name: Configure temporary apt proxy
-      ansible.builtin.copy:
-        dest: /etc/apt/apt.conf.d/99temporary-proxy
-        content: "Acquire::http::Proxy \"{{ apt_proxy_url }}\";\n"
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Install Docker engine and NVIDIA toolkit packages
-      ansible.builtin.apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
-          - nvidia-container-toolkit
-        state: present
-        update_cache: true
-  always:
-    - name: Remove temporary apt proxy
-      ansible.builtin.file:
-        path: /etc/apt/apt.conf.d/99temporary-proxy
-        state: absent
+- name: Install Docker engine and NVIDIA toolkit packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - nvidia-container-toolkit
+    state: present
+    update_cache: true
   tags: ["docker", "nvidia-toolkit", "container-runtime"]
 
 - name: Configure Docker daemon with NVIDIA runtime
