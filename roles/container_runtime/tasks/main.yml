@@ -1,14 +1,4 @@
 ---
-- name: Install prerequisite packages for Docker repository
-  ansible.builtin.apt:
-    name:
-      - ca-certificates
-      - curl
-      - gnupg
-    state: present
-    update_cache: true
-  tags: ["docker", "container-runtime"]
-
 - name: Ensure apt keyrings directory exists
   ansible.builtin.file:
     path: /etc/apt/keyrings

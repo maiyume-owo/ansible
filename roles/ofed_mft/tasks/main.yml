@@ -4,18 +4,6 @@
   changed_when: false
   when: mft_enabled | bool
   tags: ["mft", "drivers"]
-- name: Install MFT dependencies
-  ansible.builtin.apt:
-    name:
-      - tar
-      - gzip
-      - dkms
-      - python3-pip
-    state: present
-    update_cache: true
-  when: mft_enabled | bool
-  tags: ["mft", "drivers"]
-
 - name: Download MFT installer archive
   ansible.builtin.get_url:
     url: "{{ mft_installer_url }}"
@@ -59,6 +47,14 @@
   when: mft_enabled | bool
   changed_when: false
   tags: ["mft", "drivers"]
+
+
+
+- name: Install kernel headers for current running kernel
+  ansible.builtin.shell: apt-get install -y linux-headers-$(uname -r)
+  changed_when: false
+  when: ofed_enabled | bool
+  tags: ["ofed", "drivers"]
 
 - name: Download OFED installer archive
   ansible.builtin.get_url:

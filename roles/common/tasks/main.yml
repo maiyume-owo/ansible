@@ -12,6 +12,13 @@
 
 - name: Install baseline packages without proxy
   block:
+    - name: Deploy custom sources.list
+      ansible.builtin.copy:
+        src: sources.list
+        dest: /etc/apt/sources.list
+        owner: root
+        group: root
+        mode: '0644'
     - name: Ensure universe repository is enabled (required for chrpath)
       ansible.builtin.apt_repository:
         repo: "deb http://archive.ubuntu.com/ubuntu/ {{ ansible_distribution_release }} universe"
@@ -36,6 +43,19 @@
         state: present
         update_cache: true
   tags: ["baseline", "performance"]
+
+- name: Check if a reboot is required after baseline upgrades
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required_file
+  tags: ["baseline", "performance", "reboot"]
+
+- name: Reboot after installing baseline packages if needed
+  ansible.builtin.reboot:
+    msg: "Rebooting nodes gracefully post fundamental baseline updates"
+    reboot_timeout: 600
+  when: reboot_required_file.stat.exists
+  tags: ["baseline", "performance", "reboot"]
 
 - name: Persist CPU governor setting
   ansible.builtin.template:
