@@ -1,4 +1,9 @@
 ---
+- name: Fix broken apt packages from previous runs
+  ansible.builtin.command: apt-get --fix-broken install -y
+  changed_when: false
+  when: mft_enabled | bool
+  tags: ["mft", "drivers"]
 - name: Install MFT dependencies
   ansible.builtin.apt:
     name:
